@@ -1,28 +1,80 @@
 import React, { Component } from 'react';
-import { Text } from 'react-native';
+import { View, Text, Linking, TouchableWithoutFeedback } from 'react-native';
+import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
-import { Card, CardSection, Button, Spinner } from '../common';
-import AuthWebConfirm from './AuthWebConfirm';
-import { loginGoodreads } from '../../actions';
+import { Card, CardSection, Button, Input, Spinner } from '../common';
+import { 
+    loginFieldChanged,
+    loginGoodreads, 
+    signupGoodreads,
+    loginGoodreadsSuccess,
+    loginOrSignup
+} from '../../actions';
 
 class Login extends Component {
+    constructor(props, context) {
+        super(props, context);
+
+        this.onOpenURL = this.onOpenURL.bind(this);
+    }
+
     state = { loading: false };
+
+    componentDidMount() {
+        Linking.addEventListener('url', this.onOpenURL);
+    }
+
+    componentWillReceiveProps(nextprops) {
+        console.log(nextprops);
+        if (nextprops.goodreadsUserId) {
+            this.setState({ loading: false });
+            Actions.booksList();
+        }
+    }
+
+    componentWillUnmount() {
+        Linking.removeEventListener('url', this.onOpenURL);
+    }
 
     onGoodreadsLogin() {
         this.setState({ loading: true });
 
-        this.props.loginGoodreads();
+        if (this.props.signup) {
+            this.props.signupGoodreads();
+        } else {
+            this.props.loginGoodreads({ email: this.props.email, password: this.props.password });
+        }
+    }
+
+    onOpenURL(event) {
+        console.log(event);
+        Linking.removeEventListener('url', this.onOpenURL);
+
+        this.props.loginGoodreadsSuccess({ 
+            receivedCallbackUrl: event.url, 
+            username: this.props.email, 
+            password: this.props.password 
+        });
+
+        this.setState({ loading: false });
+    }
+
+    onLoginOrSignup() {
+        if (this.props.signup) {
+            // Sign up
+
+        } else {
+            // Log in
+        }
+    }
+
+    onSignupPress() {
+        Actions.login({ signup: true, title: 'Sign Up' });
     }
 
     renderOauthError() {
         if (this.props.oauthError) {
-            return <Text>{this.props.oauthError}</Text>;
-        }
-    }
-
-    renderOauthWindow() {
-        if (this.props.oauthUri) {
-            return <AuthWebConfirm uri={this.props.oauthUri} />;
+            return <CardSection><Text>{this.props.oauthError}</Text></CardSection>;
         }
     }
 
@@ -31,36 +83,77 @@ class Login extends Component {
             return <Spinner size="large" />;
         }
 
+        const goodreadsMessage = this.props.signup ? 'Link to Goodreads' : 'Log In With Goodreads';
+
         return (
         <Button
             onPress={this.onGoodreadsLogin.bind(this)}
         >
-            Log In With Goodreads
+            {goodreadsMessage}
         </Button>
         );
+    }
+
+    renderSignupButton() {
+        if (!this.props.signup) {
+            return (
+                <CardSection>
+                    <TouchableWithoutFeedback
+                        onPress={this.onSignupPress.bind(this)}
+                    >
+                        <View>
+                            <Text>Sign Up</Text>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </CardSection>
+            );
+        }
     }
 
     render() {
         return (
             <Card>
                 <CardSection>
+                    <Input 
+                        label="Email"
+                        placeholder="example@gmail.com"
+                        value={this.props.email}
+                        onChangeText={
+                            (value) => this.props.loginFieldChanged({ prop: 'email', value })
+                        }
+                    />
+                </CardSection>
+                <CardSection>
+                    <Input 
+                        secureTextEntry
+                        label="Password"
+                        placeholder="password"
+                        value={this.props.password}
+                        onChangeText={
+                            (value => this.props.loginFieldChanged({ prop: 'password', value }))
+                        }
+                    />
+                </CardSection>
+                <CardSection>
                     {this.renderLoginButton()}
                 </CardSection>
-                <CardSection>
-                    {this.renderOauthError()}
-                </CardSection>
-                <CardSection>
-                    {this.renderOauthWindow()}
-                </CardSection>
+                {this.renderOauthError()}
+                {this.renderSignupButton()}
             </Card>
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const { oauthUri, oauthError } = state.auth;
+    const { email, password, oauthUri, oauthError, oauthToken, goodreadsUserId } = state.auth;
 
-    return { oauthUri, oauthError };
+    return { email, password, oauthUri, oauthError, oauthToken, goodreadsUserId };
 };
 
-export default connect(mapStateToProps, { loginGoodreads })(Login);
+export default connect(mapStateToProps, { 
+    loginFieldChanged,
+    loginGoodreads, 
+    signupGoodreads,
+    loginGoodreadsSuccess,
+    loginOrSignup
+})(Login);
