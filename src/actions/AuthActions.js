@@ -1,6 +1,6 @@
 // import { Linking } from 'react-native';
 import axios from 'axios';
-import { Linking } from 'react-native';
+import { Linking, AsyncStorage } from 'react-native';
 import { 
     AUTH_URL_ERROR,
     AUTH_SUCCESS, 
@@ -64,12 +64,15 @@ export const loginGoodreads = ({ email, password }) => {
         axios.post('http://10.0.2.2:3030/users/login', body)
         .then((response) => {
             const user = response.data;
-            console.log(user);
+            console.log(response);
+
+            AsyncStorage.setItem('ReadyReadAuthToken', response.headers['x-auth']);
             dispatch({
                 type: AUTH_SUCCESS,
                 payload: {
                     goodreadsUserId: user.goodreadsUserId,
-                    authToken: user.goodreadsAccessToken
+                    authToken: user.goodreadsAccessToken,
+                    readyreadAuthToken: response.headers['x-auth']
                 }
             });
         })
@@ -104,6 +107,40 @@ export const loginGoodreadsSuccess = (data) => {
                     authToken: response.data.user.goodreadsAccessToken 
                 }
             });
+        });
+    };
+};
+
+export const checkLoggedInUser = () => {
+    return (dispatch) => {
+        console.log('Checking for logged in user.');
+        AsyncStorage.getItem('ReadyReadAuthToken')
+        .then((readyreadAuthToken) => {
+            axios.get('http://10.0.2.2:3030/users/me', { headers: { 'x-auth': readyreadAuthToken } })
+            .then((response) => {
+                const user = response.data;
+                console.log(response);
+
+                dispatch({
+                    type: AUTH_SUCCESS,
+                    payload: {
+                        goodreadsUserId: user.goodreadsUserId,
+                        authToken: user.goodreadsAccessToken,
+                        readyreadAuthToken: response.headers['x-auth']
+                    }
+                });
+            })
+            .catch((error) => {
+                console.log('users/me error');
+                console.log(error);
+            });
+        }, (error) => {
+            console.log('AsyncStorage error');
+            console.log(error);
+        })
+        .catch((error) => {
+            console.log('AsyncStorage error');
+            console.log(error);
         });
     };
 };

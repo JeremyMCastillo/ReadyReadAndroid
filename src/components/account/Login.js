@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, Linking, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, Linking, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 import { Card, CardSection, Button, Input, Spinner } from '../common';
@@ -8,12 +8,15 @@ import {
     loginGoodreads, 
     signupGoodreads,
     loginGoodreadsSuccess,
-    loginOrSignup
+    loginOrSignup,
+    checkLoggedInUser
 } from '../../actions';
 
 class Login extends Component {
     constructor(props, context) {
         super(props, context);
+
+        this.props.checkLoggedInUser();
 
         this.onOpenURL = this.onOpenURL.bind(this);
     }
@@ -38,6 +41,7 @@ class Login extends Component {
 
     onGoodreadsLogin() {
         this.setState({ loading: true });
+        Keyboard.dismiss();
 
         if (this.props.signup) {
             this.props.signupGoodreads();
@@ -155,5 +159,6 @@ export default connect(mapStateToProps, {
     loginGoodreads, 
     signupGoodreads,
     loginGoodreadsSuccess,
-    loginOrSignup
+    loginOrSignup,
+    checkLoggedInUser
 })(Login);

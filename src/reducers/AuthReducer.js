@@ -11,7 +11,8 @@ const INITIAL_STATE = {
     oauthUri: '',
     oauthError: '',
     oauthToken: '',
-    goodreadsUserId: 0
+    goodreadsUserId: 0,
+    readyreadAuthToken: ''
 };
 
 export default (state = INITIAL_STATE, action) => {
@@ -27,7 +28,8 @@ export default (state = INITIAL_STATE, action) => {
                 ...state, 
                 ...INITIAL_STATE, 
                 oauthToken: action.payload.authToken, 
-                goodreadsUserId: action.payload.goodreadsUserId 
+                goodreadsUserId: action.payload.goodreadsUserId,
+                readyreadAuthToken: action.payload.readyreadAuthToken
             };
         default:
         return state;
