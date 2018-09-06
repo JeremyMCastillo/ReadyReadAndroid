@@ -7,8 +7,8 @@ class BooksListItem extends Component {
     render() {
         const { title } = this.props.book;
         console.log('Rendering book list item.');
-        console.log(title[0]);
-        const titleValue = title[0];
+        console.log(title);
+        const titleValue = title;
 
         return (
             <Card>

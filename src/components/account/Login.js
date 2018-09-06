@@ -2,6 +2,10 @@ import React, { Component } from 'react';
 import { View, Text, Linking, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
+
+import { GoogleSignin, GoogleSigninButton } from 'react-native-google-signin';
+var { FBLogin, FBLoginManager } = require('react-native-facebook-login');
+
 import { Card, CardSection, Button, Input, Spinner } from '../common';
 import { 
     loginFieldChanged,
@@ -76,6 +80,14 @@ class Login extends Component {
         Actions.login({ signup: true, title: 'Sign Up' });
     }
 
+    onGoogleSignin() {
+        GoogleSignin.configure({});
+        GoogleSignin.signIn().then((user) => {
+            console.log(user);
+            this.props.loginGoodreads({ email: user.email, password: user.id });
+        });
+    }
+
     renderOauthError() {
         if (this.props.oauthError) {
             return <CardSection><Text>{this.props.oauthError}</Text></CardSection>;
@@ -87,7 +99,7 @@ class Login extends Component {
             return <Spinner size="large" />;
         }
 
-        const goodreadsMessage = this.props.signup ? 'Link to Goodreads' : 'Log In With Goodreads';
+        const goodreadsMessage = "Log in with Email";
 
         return (
         <Button
@@ -116,34 +128,55 @@ class Login extends Component {
 
     render() {
         return (
-            <Card>
-                <CardSection>
-                    <Input 
-                        label="Email"
-                        placeholder="example@gmail.com"
-                        value={this.props.email}
-                        onChangeText={
-                            (value) => this.props.loginFieldChanged({ prop: 'email', value })
-                        }
-                    />
-                </CardSection>
-                <CardSection>
-                    <Input 
-                        secureTextEntry
-                        label="Password"
-                        placeholder="password"
-                        value={this.props.password}
-                        onChangeText={
-                            (value => this.props.loginFieldChanged({ prop: 'password', value }))
-                        }
-                    />
-                </CardSection>
-                <CardSection>
-                    {this.renderLoginButton()}
-                </CardSection>
-                {this.renderOauthError()}
-                {this.renderSignupButton()}
-            </Card>
+            <View>
+                <Card>
+                    {/* Google and facebook log in buttons */}
+                    <CardSection>
+                        <GoogleSigninButton
+                            style={{ height: 60, width: 300 }}
+                            onPress={this.onGoogleSignin}
+                        />
+                    </CardSection>
+                    <CardSection>
+                        <FBLogin style={{ height: 60, width: 200 }} />
+                    </CardSection>
+                </Card>
+                <Card>
+                    {/* Goodreads Log In */}
+                    <CardSection>
+                        <Button>Log in with Goodreads</Button>
+                    </CardSection>
+                </Card>
+                <Card>
+                    {/* Email Password Log In */}
+                    <CardSection>
+                        <Input 
+                            label="Email"
+                            placeholder="example@gmail.com"
+                            value={this.props.email}
+                            onChangeText={
+                                (value) => this.props.loginFieldChanged({ prop: 'email', value })
+                            }
+                        />
+                    </CardSection>
+                    <CardSection>
+                        <Input 
+                            secureTextEntry
+                            label="Password"
+                            placeholder="password"
+                            value={this.props.password}
+                            onChangeText={
+                                (value => this.props.loginFieldChanged({ prop: 'password', value }))
+                            }
+                        />
+                    </CardSection>
+                    <CardSection>
+                        {this.renderLoginButton()}
+                    </CardSection>
+                    {this.renderSignupButton()}
+                    {this.renderOauthError()}
+                </Card>
+            </View>
         );
     }
 }
